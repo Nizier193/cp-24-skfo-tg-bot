@@ -1,5 +1,5 @@
 # Телеграм-клиент для RuStore
-**Uses PyTelegrambotApi**
+**Попробовать: https://t.me/rustore_manager_bot**
 
 ## Features:
 - Поддержка загрузки файлов в систему
@@ -24,3 +24,4 @@ requirements.txt
 git clone https://github.com/Nizier193/05-07-Hackatone-TGBot.git
 python3 main.py
 ```
+
