@@ -2,19 +2,21 @@ import telebot.apihelper
 from telebot import TeleBot
 from misc.answers import *
 from services.RAGFlow import RagFlow
+from services.RAGApp import RagAPP
 from requests import exceptions
-from config import Config
+from config import Config, Providers
 import os
 
 apikey = Config.TELEGRAM_API
 bot = TeleBot(
     apikey
 )
-flow = RagFlow()
+flow = RagAPP()
 commands = [
     '/start',
     '/help',
-    '/upload_file'
+    '/upload_file',
+    '/files_get'
 ]
 
 @bot.message_handler(commands=['start'])
@@ -26,6 +28,7 @@ def start(message):
 def help(message):
     rustore_logo = open('media/QA_logo.jpg', 'rb')
     bot.send_photo(message.chat.id, rustore_logo, caption=assistant_help)
+    bot.send_message(message.chat.id, assistant_config)
 
 @bot.message_handler(commands=['upload_file'])
 def upload_file(message):
@@ -40,46 +43,38 @@ def upload_file(message):
         downloaded_file = bot.download_file(file_info.file_path)
         print(f'[TG] Recieved file. {message.document.file_name}')
 
-        if 'data' not in os.listdir('.'):
+        if Config.FILEBASE[:-1] not in os.listdir('.'):
             print('[TG] Making data directory')
-            os.mkdir('data')
+            os.mkdir(Config.FILEBASE)
 
-        with open('data/' + message.document.file_name, 'wb') as file:
+        with open(Config.FILEBASE + message.document.file_name, 'wb') as file:
             file.write(downloaded_file)
 
-        cwd = os.getcwd()
-        print(f'[TG] Loading files to RagFLOW {os.path.join(cwd, 'data', message.document.file_name)}')
-        flow.load_files(
-            file= os.path.join(cwd, 'data/', message.document.file_name),
-            knowledge_base='main'
-        ) # Непонятно какой формат file.
+        print(f'[TG] Loading files to RagAPP {os.path.join(Config.FILEBASE, message.document.file_name)}')
+        flow.add_file(
+            filename=os.path.join(
+                message.document.file_name
+            )
+        )
+        print('[TG] Files added to RagAPP')
 
         process_logo = open('media/processing.jpeg', 'rb')
         bot.send_photo(message.chat.id, process_logo, caption=assistant_files_success)
 
     bot.register_next_step_handler(message, file_load)
 
+@bot.message_handler(commands=['files_get'])
+def answer(message):
+    str_ = '\n'.join([str(index + 1) + ". " + name.get('name') for index, name in enumerate(flow.get_files())])
+    bot.send_message(message.chat.id, "Все файлы, которые есть в системе: \n" + str_)
 
 @bot.message_handler(content_types=['text'])
 def answer(message):
     if message.text not in commands:
-
-        print(f'\n[TG] Got Query: {message.text}')
-        conv_id = flow.make_conversation(
-            tg_userid = message.json.get('from').get('id')
-        )
-
-        print('[TG] Pulling Answer')
-        answer = flow.get_answer(message.text, conv_id)
-        if answer == None:
-            conv_id = flow.make_conversation(
-                tg_userid = message.json.get('from').get('id'),
-                force = True
-            )
-            answer = flow.get_answer(message.text, conv_id)
+        answer = flow.request(message.text)
         print('[TG] Sending Message')
         bot.send_message(message.chat.id, answer)
-        print('[TG] Query answered \n -=-=-=-=-=-=-=-=-=-')
+        print('[TG] Query Answered')
 
 try:
     bot.infinity_polling()

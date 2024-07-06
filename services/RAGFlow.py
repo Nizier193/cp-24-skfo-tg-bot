@@ -8,6 +8,7 @@ from database import UserDatabase
 from config import Config
 
 db = UserDatabase()
+db.create_table()
 
 class RagFlow:
     def __init__(self):

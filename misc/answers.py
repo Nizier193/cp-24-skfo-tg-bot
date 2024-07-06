@@ -1,3 +1,5 @@
+from config import Config
+
 assistant_entry = """
 Здравствуйте!
 
@@ -45,4 +47,11 @@ assistant_files = """
 assistant_files_success = """
 Вы успешно загрузили файл!
 Скоро его изучу и помогу вам с разрешением любых проблем!
+"""
+
+configuration = "\n".join([f'{name[:12]}.. - {str(value)[:12]}..' for name, value in Config.__dict__.items()])
+assistant_config = f"""
+Загруженная конфигурация бота:
+{configuration}
+Для изменений необходимо использовать config.Config и config.Providers
 """
