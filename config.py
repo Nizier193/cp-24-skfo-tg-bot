@@ -10,7 +10,7 @@ class Config:
 
     RAGAPP_URL = "https://cp-24-skfo.open-core.ru/api/"
 
-    TELEGRAM_API = "7462994935:AAGCguR-5ZMgvYWIM54GM35EVkBw_ZClpFM"
+    TELEGRAM_API = "<Your telegram bot api_key>"
     DATABASE_DIR = "db_directory/db.db"
 
     PROVIDER = Providers.RAGAPP
